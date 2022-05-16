@@ -127,8 +127,8 @@
     </table>
 </div>
 <div class="guziki">
-    <button class="guzik" id="getMoreElementsButton">pokaż więcej wierszy</button>
-    <button class="guzik" id="getAllElementsButton">pokaż wszystkie wiersze</button>
+    <button class="guzik">pokaż więcej wierszy</button>
+    <button class="guzik">pokaż wszystkie wiersze</button>
 </div>
 
 
@@ -137,7 +137,9 @@
 {% block scripts %}
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
     <script type="text/javascript">
+    
     function addResults(x, table) {
+
         let index = 1;
         let tr = document.createElement('tr');
         let id = document.createElement(`td`);
@@ -152,21 +154,45 @@
             id.appendChild(id_row);
         }
         */
+        let refsize = len(x.refundacje);
         id.innerText = x.id;
         tr.appendChild(id);
         for (let elem of ['nazwa_leku', 'substancja_czynna', 'postac', 'dawka_leku', 'zawartosc_opakowania', 'identyfikator_leku']) {
             let td = document.createElement(`td`);
             td.setAttribute("id", `id${index}`);
+            td.setAttribute("rowspan", `${refsize}`);
             index += 1;
             td.innerText = x[`${elem}`];
             tr.appendChild(td);
         }
+
         for (let elem of ['zakres_wskazan', 'zakres_wskazan_pozarejestracyjnych', 'poziom_odplatnosci', 'wysokosc_doplaty']) {
             let td = document.createElement(`td`);
             td.setAttribute("id", `id${index}`);
             td.setAttribute("class", "ref");
             index += 1;
-            for (let refundacja of x.refundacje) {
+            let refundacja = x.refundacje[0];
+                let elem_row = document.createElement('div');
+                elem_row.setAttribute("class", "id_row");
+                elem_row.innerText = refundacja[`${elem}`];
+                if (!elem_row.innerText) {
+                    elem_row.innerText = "\n\n\n";
+                }
+                td.appendChild(elem_row);
+            
+            tr.appendChild(td);
+        }
+
+        table.appendChild(tr);
+        let resztaRefundacji = x.refundacje.slice(1);
+
+        for(let refundacja of resztaRefundacji) {
+            tr = document.createElement('tr'); 
+            index += 1;  //trochenie rozumiem co tu robi index
+            for (let elem of ['zakres_wskazan', 'zakres_wskazan_pozarejestracyjnych', 'poziom_odplatnosci', 'wysokosc_doplaty']) {
+                td = document.createElement(`td`);
+                td.setAttribute("id", `id${index}`);
+                td.setAttribute("class", "ref");
                 let elem_row = document.createElement('div');
                 elem_row.setAttribute("class", "id_row");
                 elem_row.innerText = refundacja[`${elem}`];
@@ -176,8 +202,27 @@
                 td.appendChild(elem_row);
             }
             tr.appendChild(td);
+            table.appendChild(tr);
         }
-        table.appendChild(tr);
+        
+        // for (let elem of ['zakres_wskazan', 'zakres_wskazan_pozarejestracyjnych', 'poziom_odplatnosci', 'wysokosc_doplaty']) {
+        //     let td = document.createElement(`td`);
+        //     td.setAttribute("id", `id${index}`);
+        //     td.setAttribute("class", "ref");
+        //     index += 1;
+        //     for (let refundacja of x.refundacje) {
+        //         let elem_row = document.createElement('div');
+        //         elem_row.setAttribute("class", "id_row");
+        //         elem_row.innerText = refundacja[`${elem}`];
+        //         if (!elem_row.innerText) {
+        //             elem_row.innerText = "\n\n\n";
+        //         }
+        //         td.appendChild(elem_row);
+        //     }
+        //     tr.appendChild(td);
+        // }
+        // table.appendChild(tr);
+
     }
 
     document.getElementById("searchForm").addEventListener("submit", x => {
@@ -265,75 +310,6 @@
                 console.log('ERROR')
             }
             })
-        })
-    </script>
-    <script type="text/javascript">
-        document.getElementById("getMoreElementsButton").addEventListener("click", function (x) {
-            $.ajax({
-            type: 'GET',
-            url: "/get_more_results/",
-            success: function (response) {
-                alert("UDAŁO SIĘ")
-                let data = response['query_result'];
-                var table = document.getElementById('resultTable').getElementsByTagName('tbody')[0];
-                for (i in data) {
-                    x = data[i];
-                    addResults(x, table);
-                }
-            },
-            error: function (response) {
-                alert("NIE UDALO SIE")
-                console.log('ERROR')
-            }
-        })
-        })
-    </script>
-    <script type="text/javascript">
-        document.getElementById("getMoreElementsButton").addEventListener("click", function (x) {
-            $.ajax({
-            type: 'GET',
-            url: "/get_more_results/",
-            data: {
-              load_all: false
-            },
-            success: function (response) {
-                alert("UDAŁO SIĘ")
-                let data = response['query_result'];
-                var table = document.getElementById('resultTable').getElementsByTagName('tbody')[0];
-                for (i in data) {
-                    x = data[i];
-                    addResults(x, table);
-                }
-            },
-            error: function (response) {
-                alert("NIE UDALO SIE")
-                console.log('ERROR')
-            }
-        })
-        })
-    </script>
-    <script type="text/javascript">
-        document.getElementById("getAllElementsButton").addEventListener("click", function (x) {
-            $.ajax({
-            type: 'GET',
-            url: "/get_more_results/",
-            data: {
-              load_all: true
-            },
-            success: function (response) {
-                alert("UDAŁO SIĘ")
-                let data = response['query_result'];
-                var table = document.getElementById('resultTable').getElementsByTagName('tbody')[0];
-                for (i in data) {
-                    x = data[i];
-                    addResults(x, table);
-                }
-            },
-            error: function (response) {
-                alert("NIE UDALO SIE")
-                console.log('ERROR')
-            }
-        })
         })
     </script>
 {% endblock %}
