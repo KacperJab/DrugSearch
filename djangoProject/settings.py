@@ -26,7 +26,9 @@ SECRET_KEY = 'django-insecure-n9pyuizavc-wpw=qa^9c%o+9a@9!r=gf_28k87szo80&=cd6^9
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'petite-schools-wash-78-11-237-117.loca.lt',
+]
 
 
 # Application definition

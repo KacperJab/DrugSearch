@@ -34,7 +34,6 @@ sort_request: WSGIRequest
 
 is_sorted: bool
 
-
 def update_offset():
     global offset, start_index, to_add_to_start
     offset += 100
@@ -52,8 +51,7 @@ def reset_offset():
 
 def set_max_offset():
     global offset
-    offset = 6000
-
+    offset = Lek.objects.count()
 
 def home(request):
     global last_request
@@ -76,7 +74,7 @@ def load_initial_data(request):
     #print("load_initial_data")
     query = ""
     if request.method == 'GET':
-        query_result = Lek.objects.all().order_by('pk')[start_index:offset]
+        query_result = Lek.objects.all().prefetch_related('refundacje').order_by('pk')[start_index:offset]
         serialized_query = LekSerializer(query_result, many='True').data
         context = {  # create context for JSON response
             'query': query,
@@ -101,12 +99,15 @@ def search_results(request):
                               "refundacje__poziom_odplatnosci", "refundacje__wysokosc_doplaty")
     query = request.GET.get('query')
     #print(query)
+    print("start request")
     if request.method == 'GET':
+        print("GET")
         if (query != ""):
-            helper_result = Lek.objects.annotate(search=search_vec).\
+            helper_result = Lek.objects.annotate(search=search_vec).prefetch_related('refundacje').\
                             filter(search__icontains=query).order_by('pk')[start_index:]
         else:
-            helper_result = Lek.objects.all().order_by('pk')[start_index:]
+            helper_result = Lek.objects.all().prefetch_related('refundacje').order_by('pk')[start_index:]
+        print("After database")
         query_result = []
         to_add = offset - (start_index - collected_rows)
         prev_i = 0
@@ -120,18 +121,22 @@ def search_results(request):
             else:
                 to_add_to_start += 1
                 collected_rows += 1
+        print("After filter")
         serialized_query = LekSerializer(query_result, many='True').data
+        print("afer serialize")
         context = {  # create context for JSON response
             'query': query,
             'query_result': serialized_query
         }
         return JsonResponse(context, safe=False)
     else:
+        print("ELSE")
         if (query != ""):
-            helper_result = Lek.objects.annotate(search=search_vec).\
+            helper_result = Lek.objects.annotate(search=search_vec).prefetch_related('refundacje').\
                             filter(search__icontains=query).order_by('pk')[start_index:]
         else:
-            helper_result = Lek.objects.all().order_by('pk')[start_index:]
+            helper_result = Lek.objects.all().prefetch_related('refundacje').order_by('pk')[start_index:]
+        print("After database")
         query_result = []
         to_add = offset - (start_index - collected_rows)
         prev_i = 0
@@ -145,7 +150,9 @@ def search_results(request):
             else:
                 to_add_to_start += 1
                 collected_rows += 1
+        print("afer filter")
         serialized_query = LekSerializer(query_result, many='True').data
+        print("afer serialize")
         context = {
             'query': query,
             'query_result': serialized_query
@@ -177,25 +184,25 @@ def sort_results(request):
     if request.method == 'GET':
         if query == "":
             if sort_by_dir == 'descending':
-                helper_result = Lek.objects.all().order_by('-'+sort_by_key, 'pk')[start_index:]
+                helper_result = Lek.objects.all().prefetch_related('refundacje').order_by('-'+sort_by_key, 'pk')[start_index:]
             else:
-                helper_result = Lek.objects.all().order_by(sort_by_key, 'pk')[start_index:]
+                helper_result = Lek.objects.all().prefetch_related('refundacje').order_by(sort_by_key, 'pk')[start_index:]
         else:
             if sort_by_dir == 'descending':
                 if (query != ""):
-                    helper_result = Lek.objects.annotate(search=search_vec).\
+                    helper_result = Lek.objects.annotate(search=search_vec).prefetch_related('refundacje').\
                                      filter(search__icontains=query).\
                                      order_by('-'+sort_by_key, 'pk')[start_index:]  # filter the database
                 else:
-                    helper_result = Lek.objects.all().\
+                    helper_result = Lek.objects.all().prefetch_related('refundacje').\
                                      order_by('-'+sort_by_key, 'pk')[start_index:]  # filter the database
             else:
                 if (query != ""):
-                    helper_result = Lek.objects.annotate(search=search_vec).\
+                    helper_result = Lek.objects.annotate(search=search_vec).prefetch_related('refundacje').\
                                      filter(search__icontains=query).\
                                      order_by(sort_by_key, 'pk')[start_index:]  # filter the database
                 else:
-                    helper_result = Lek.objects.all().\
+                    helper_result = Lek.objects.all().prefetch_related('refundacje').\
                                      order_by(sort_by_key, 'pk')[start_index:]  # filter the database
         query_result = []
         to_add = offset - (start_index - collected_rows)
@@ -224,12 +231,15 @@ def sort_results(request):
 def get_more_results(request):
     #print(last_request)
     query = request.GET.get('load_all')
-    if query:
+    if query == "true":
+        print(query)
         update_offset()
         set_max_offset()
-        #print("LOAD_ALL_ELEMENTS")
+        print("LOAD_ALL_ELEMENTS")
     else:
+        print(query)
         update_offset()
+        print("LOAD SOME ELEMENTS")
     if last_request.path == "/load_initial_data/":
         #print("get more after load initial data")
         return load_initial_data(request)
