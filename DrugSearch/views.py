@@ -24,6 +24,10 @@ offset = 100
 
 start_index = 0
 
+to_add_to_start = 0
+
+collected_rows = 0
+
 last_request: WSGIRequest
 
 sort_request: WSGIRequest
@@ -32,15 +36,19 @@ is_sorted: bool
 
 
 def update_offset():
-    global offset, start_index
+    global offset, start_index, to_add_to_start
     offset += 100
     start_index += 100
+    start_index += to_add_to_start
+    to_add_to_start = 0
 
 
 def reset_offset():
-    global offset, start_index
+    global offset, start_index, to_add_to_start, collected_rows
     offset = 100
     start_index = 0
+    to_add_to_start = 0
+    collected_rows = 0
 
 def set_max_offset():
     global offset
@@ -59,7 +67,7 @@ def home(request):
 
 
 def load_initial_data(request):
-    global last_request, is_sorted
+    global last_request, is_sorted, collected_rows, to_add_to_start
     is_sorted = False
     if request.path != '/get_more_results/':
         last_request = request
@@ -79,7 +87,7 @@ def load_initial_data(request):
 
 
 def search_results(request):
-    global last_request, is_sorted
+    global last_request, is_sorted, collected_rows, to_add_to_start
     if request.path != '/get_more_results/':
         last_request = request
         reset_offset()
@@ -100,7 +108,7 @@ def search_results(request):
         else:
             helper_result = Lek.objects.all().order_by('pk')[start_index:]
         query_result = []
-        to_add = offset - start_index
+        to_add = offset - (start_index - collected_rows)
         prev_i = 0
         for i in (helper_result):
             if (to_add <= 0):
@@ -108,7 +116,10 @@ def search_results(request):
             if (prev_i == 0 or i.identyfikator_leku != prev_i.identyfikator_leku):
                 query_result.append(i)
                 to_add -= 1
-                prev_i = i    
+                prev_i = i
+            else:
+                to_add_to_start += 1
+                collected_rows += 1
         serialized_query = LekSerializer(query_result, many='True').data
         context = {  # create context for JSON response
             'query': query,
@@ -122,7 +133,7 @@ def search_results(request):
         else:
             helper_result = Lek.objects.all().order_by('pk')[start_index:]
         query_result = []
-        to_add = offset - start_index
+        to_add = offset - (start_index - collected_rows)
         prev_i = 0
         for i in (helper_result):
             if (to_add <= 0):
@@ -130,7 +141,10 @@ def search_results(request):
             if (prev_i == 0 or i.identyfikator_leku != prev_i.identyfikator_leku):
                 query_result.append(i)
                 to_add -= 1
-                prev_i = i    
+                prev_i = i
+            else:
+                to_add_to_start += 1
+                collected_rows += 1
         serialized_query = LekSerializer(query_result, many='True').data
         context = {
             'query': query,
@@ -141,7 +155,7 @@ def search_results(request):
 
 
 def sort_results(request):
-    global last_request, sort_request, is_sorted, start_index
+    global last_request, sort_request, is_sorted, start_index, collected_rows, to_add_to_start
     reset_table = False
     if request.path == "/sort_results/":
         reset_offset()
@@ -184,7 +198,7 @@ def sort_results(request):
                     helper_result = Lek.objects.all().\
                                      order_by(sort_by_key, 'pk')[start_index:]  # filter the database
         query_result = []
-        to_add = offset - start_index
+        to_add = offset - (start_index - collected_rows)
         prev_i = 0
         for i in (helper_result):
             if (to_add <= 0):
@@ -192,7 +206,10 @@ def sort_results(request):
             if (prev_i == 0 or i.identyfikator_leku != prev_i.identyfikator_leku):
                 query_result.append(i)
                 to_add -= 1
-                prev_i = i    
+                prev_i = i
+            else:
+                to_add_to_start += 1
+                collected_rows += 1
         serialized_query = LekSerializer(query_result, many='True').data
         #print(serialized_query)
         context = {  # create context for JSON response
