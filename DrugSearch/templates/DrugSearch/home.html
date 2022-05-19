@@ -87,37 +87,21 @@
                 <th id="id8">
                     <div class="nazwa_kolumny">
                         <p class="tytul_kolumny">Zakres wskazań objętych refundacją</p>
-                        <div class="triangles">
-                            <input id="zakres_wskazan" class="button_triangle_up" type="image" src="{% static 'DrugSearch/trojkat1.png' %}">
-                            <input id="zakres_wskazan" class="button_triangle_down" type="image" src="{% static 'DrugSearch/trojkat2.png' %}">
-                        </div>
                     </div>
                 </th>
                 <th id="id9">
                     <div class="nazwa_kolumny">
                         <p class="tytul_kolumny">Zakres wskazań pozarejestracyjnych objętych refundacją</p>
-                        <div class="triangles">
-                            <input id="zakres_wskazan_pozarejestracyjnych" class="button_triangle_up" type="image" src="{% static 'DrugSearch/trojkat1.png' %}">
-                            <input id="zakres_wskazan_pozarejestracyjnych" class="button_triangle_down" type="image" src="{% static 'DrugSearch/trojkat2.png' %}">
-                        </div>
                     </div>
                 </th>
                 <th id="id10">
                     <div class="nazwa_kolumny">
                         <p class="tytul_kolumny">Poziom odpłatności</p>
-                        <div class="triangles">
-                            <input id="poziom_odplatnosci" class="button_triangle_up" type="image" src="{% static 'DrugSearch/trojkat1.png' %}">
-                            <input id="poziom_odplatnosci" class="button_triangle_down" type="image" src="{% static 'DrugSearch/trojkat2.png' %}">
-                        </div>
                     </div>
                 </th>
                 <th id="id11">
                     <div class="nazwa_kolumny">
                         <p class="tytul_kolumny">Wysokość dopłaty świadczeniobiorcy</p>
-                        <div class="triangles">
-                            <input id="wysokosc_doplaty" class="button_triangle_up" type="image" src="{% static 'DrugSearch/trojkat1.png' %}">
-                            <input id="wysokosc_doplaty" class="button_triangle_down" type="image" src="{% static 'DrugSearch/trojkat2.png' %}">
-                        </div>
                     </div>
                 </th>
             </tr>
@@ -137,6 +121,45 @@
 {% block scripts %}
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
     <script type="text/javascript">
+
+    function before() {
+        let guziki = document.getElementsByClassName("guzik");
+        for (guzik of guziki) {
+            guzik.disabled = true;
+        }
+        let trojkaty = document.getElementsByClassName("button_triangle_up");
+        for (trojkat of trojkaty) {
+            trojkat.disabled = true;
+        }
+        trojkaty = document.getElementsByClassName("button_triangle_down");
+        for (trojkat of trojkaty) {
+            trojkat.disabled = true;
+        }
+        let przyciski = document.getElementsByClassName("form_submit");
+        for (przycisk of przyciski) {    
+            przycisk.disabled = true;
+        }
+    }
+    
+    function after() {
+        let guziki = document.getElementsByClassName("guzik");
+        for (guzik of guziki) {
+            guzik.disabled = false;
+        }
+        let trojkaty = document.getElementsByClassName("button_triangle_up");
+        for (trojkat of trojkaty) {
+            trojkat.disabled = false;
+        }
+        trojkaty = document.getElementsByClassName("button_triangle_down");
+        for (trojkat of trojkaty) {
+            trojkat.disabled = false;
+        }
+        let przyciski = document.getElementsByClassName("form_submit");
+        for (przycisk of przyciski) {    
+            przycisk.disabled = false;
+        }
+    }
+
     function addResults(x, table) {
 
         let index = 1;
@@ -163,14 +186,6 @@
                 td.setAttribute("id", `id${index}`);
                 td.setAttribute("class", "ref");
                 index += 1;
-                //for (let refundacja of x.refundacje) {
-                //    let elem_row = document.createElement('div');
-                //    elem_row.setAttribute("class", "id_row");
-                    //elem_row.innerText = refundacja[`${elem}`];
-                    //if (!elem_row.innerText) {
-                    //    elem_row.innerText = "\n\n\n";
-                    //}
-                    //td.appendChild(elem_row);
             }
             tr.appendChild(td);
             table.appendChild(tr);
@@ -247,6 +262,8 @@
             data: {
                 query: queryString
             },
+            beforeSend: () => {before()},
+            complete: () => {after()},
             success: function (response) {
                 let resultDiv = document.getElementById("responseFetch");
                 let data = response['query_result'];
@@ -280,6 +297,8 @@
                         sort_direction: (button_type == 'button_triangle_up' ? 'ascending' : 'descending'),
                         sort_by: event.target.id
                     },
+                    beforeSend: () => {before()},
+                    complete: () => {after()},
                     success: function (response) {
                         let resultDiv = document.getElementById("responseFetch");
                         let data = response['query_result'];
@@ -305,6 +324,8 @@
             $.ajax({
             type: 'GET',
             url: "/load_initial_data/",
+            beforeSend: () => {before()},
+            complete: () => {after()},
             success: function (response) {
                 let data = response['query_result'];
                 var first = data[0];
@@ -327,6 +348,8 @@
             $.ajax({
             type: 'GET',
             url: "/get_more_results/",
+            beforeSend: () => {before()},
+            complete: () => {after()},
             success: function (response) {
                 let data = response['query_result'];
                 var table = document.getElementById('resultTable').getElementsByTagName('tbody')[0];
@@ -350,6 +373,8 @@
             data: {
               load_all: false
             },
+            beforeSend: () => {before()},
+            complete: () => {after()},
             success: function (response) {
                 let data = response['query_result'];
                 var table = document.getElementById('resultTable').getElementsByTagName('tbody')[0];
@@ -373,6 +398,8 @@
             data: {
               load_all: true
             },
+            beforeSend: () => {before()},
+            complete: () => {after()},
             success: function (response) {
                 let data = response['query_result'];
                 var table = document.getElementById('resultTable').getElementsByTagName('tbody')[0];
