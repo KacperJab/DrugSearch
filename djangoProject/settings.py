@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 import os.path
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 from django.contrib import staticfiles
@@ -27,7 +28,10 @@ SECRET_KEY = 'django-insecure-n9pyuizavc-wpw=qa^9c%o+9a@9!r=gf_28k87szo80&=cd6^9
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'localhost',
+    'petite-schools-wash-78-11-237-117.loca.lt',
+]
 
 
 # Application definition
@@ -123,6 +127,7 @@ USE_TZ = True
 # static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
