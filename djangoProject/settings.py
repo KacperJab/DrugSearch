@@ -30,6 +30,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = [
     'localhost',
+    '127.0.0.1',
     'petite-schools-wash-78-11-237-117.loca.lt',
 ]
 

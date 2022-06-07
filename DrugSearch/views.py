@@ -1,6 +1,7 @@
 import json
+import re
 
-from django.contrib.postgres.search import SearchVector
+from django.contrib.postgres.search import SearchVector, SearchQuery
 from django.core.handlers.wsgi import WSGIRequest
 from django.db.models import QuerySet
 from django.db.models.functions import Coalesce
@@ -103,14 +104,41 @@ def search_results(request):
     if request.method == 'GET':
         print("GET")
         if (query != ""):
-            helper_result = Lek.objects.annotate(search=search_vec).prefetch_related('refundacje').\
-                            filter(search__icontains=query).order_by('pk')[start_index:]
+            helper_result_1 = Lek.objects.none()
+            helper_result_2 = Lek.objects.none()
+
+            exact_match_queries = query.split('"')[1::2]
+            print(exact_match_queries)
+            if exact_match_queries:
+                s = SearchQuery(exact_match_queries[0], search_type="phrase")
+                for x in exact_match_queries[1:]:
+                    s = s & SearchQuery(x, search_type="phrase")
+                helper_result_1 = Lek.objects.annotate(search=search_vec).prefetch_related('refundacje'). \
+                                      filter(search=s).order_by('pk')[start_index:]
+            # remove words in quotations from query
+            line = re.sub('".*?"', '', query)
+            contains_match_queries = line.split()
+            print(contains_match_queries)
+
+            if contains_match_queries:
+                helper_result_2 = Lek.objects.annotate(search=search_vec).prefetch_related('refundacje'). \
+                                    filter(search__icontains=contains_match_queries[0]).order_by('pk')[start_index:]
+                for contains_match in contains_match_queries[1:]:
+                    helper_result_2 = helper_result_2 & Lek.objects.annotate(search=search_vec).prefetch_related('refundacje'). \
+                                          filter(search__icontains=contains_match).order_by('pk')[
+                                      start_index:]
+
+            if exact_match_queries and contains_match_queries:
+                helper_result = helper_result_1 & helper_result_2
+            else:
+                helper_result = helper_result_1 | helper_result_2
         else:
             helper_result = Lek.objects.all().prefetch_related('refundacje').order_by('pk')[start_index:]
         print("After database")
         query_result = []
         to_add = offset - (start_index - collected_rows)
         prev_i = 0
+        helper_result = helper_result.order_by('pk')
         for i in (helper_result):
             if (to_add <= 0):
                 break
