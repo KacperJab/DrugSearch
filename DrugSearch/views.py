@@ -104,6 +104,15 @@ def search_results(request):
     if request.method == 'GET':
         print("GET")
         if (query != ""):
+            ileCiapek = query.count('"')
+            if ileCiapek % 2 != 0:
+                context = {  # create context for JSON response
+                    'query': query,
+                    'query_result': [],
+                }
+                is_sorted = True
+                return JsonResponse(context, safe=False)
+
             helper_result_1 = Lek.objects.none()
             helper_result_2 = Lek.objects.none()
 
@@ -221,6 +230,16 @@ def sort_results(request):
                     # helper_result = Lek.objects.annotate(search=search_vec).prefetch_related('refundacje').\
                     #                  filter(search__icontains=query).\
                     #                  order_by('-'+sort_by_key, 'pk')  # filter the database
+
+                    ileCiapek = query.count('"')
+                    if ileCiapek % 2 != 0:
+                        context = {  # create context for JSON response
+                            'query': query,
+                            'query_result': [],
+                            'reset_table': reset_table
+                        }
+                        is_sorted = True
+                        return JsonResponse(context, safe=False)
 
                     helper_result_1 = Lek.objects.none()
                     helper_result_2 = Lek.objects.none()
